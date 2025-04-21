@@ -1,63 +1,51 @@
-<p align="center">
-   <br/>
-   <a href="https://next-auth.js.org" target="_blank"><img height="150px" src="https://next-auth.js.org/img/logo/logo-sm.png" /></a>
-   <h3 align="center">NextAuth.js Adapters</h3>
-   <p align="center">Adapter Repository for NextAuth.js</p>
-</p>
+# Mysql2 Adapter
 
-## Overview
+This is a [`next-auth`](https://next-auth.js.org) adapter for projects that use
+[mysql2](https://www.npmjs.com/package/mysql2) to connect to MySQL databases.
 
-NextAuth.js is a complete open source authentication solution for [Next.js](http://nextjs.org/) applications.
+## Usage
 
-It is designed from the ground up to support Next.js and Serverless environments.
+```typescript title="pages/api/auth/[...nextauth].ts"
+import NextAuth from "next-auth"
+import { Mysql2Adapter } from "@next-auth/mysql2-adapter"
 
-## Getting Started
+// provide a connectionPromise from "mysql2/promise" via mysql.createConnection or mysql.createPool
 
-This repository is a lerna mono-repo which is home to multiple next-auth adapters maintained by the community to support any database.
+export default NextAuth({
+  adapter: Mysql2Adapter(connectionPromise),
+  providers: [],
+})
+```
 
-### Adapters
+### Extended user model
 
-Currently, these are experimental adapters and we would appreciate feedback on them!
+If your `User` table has additional fields to the default fields (`name`, `email`, `email_verified`, `image`), you
+need to configure a mapping for the adapter like in the following example:
 
-The two adapters with the "legacy" suffix are the adapters that currently ship with the core `next-auth` package. In the future, we will be doing the following two things though:
+```typescript
+const adapterConfig = {
+  extendUserModel: {
+    phone: "phone", // additional property "phone" which is also named "phone" in the User database table
+    postalCode: "postal_code", // additional property "postalCode" which is named "postal_code" in the User database table
+  },
+}
 
-1. Removing them from the core package in the short-term
-2. Replacing them with their more up-to-date versions in the medium-term.
+export default NextAuth({
+  adapter: Mysql2Adapter(connectionPromise, adapterConfig),
+  providers: [],
+})
+```
 
-Of course, we will announce and document any such changes thoroughly before taking any action. This changes are tenatively slated for `v4.0.0`.
+## MySQL model
 
-| Adapter        | Version                                                                                                                                                                   | Docs                                                                           | NPM                                                                                   |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
-| typeorm-legacy | [![npm](https://img.shields.io/npm/v/@next-auth/typeorm-legacy-adapter?label=version&style=flat-square)](https://www.npmjs.com/package/@next-auth/typeorm-legacy-adapter) | [adapters/typeorm](https://next-auth.js.org/adapters/typeorm/typeorm-overview) | [@next-auth/typeorm-legacy-adapter](https://npm.im/@next-auth/typeorm-legacy-adapter) |
-| prisma         | [![npm](https://img.shields.io/npm/v/@next-auth/prisma-adapter?label=version&style=flat-square)](https://www.npmjs.com/package/@next-auth/prisma-adapter)                 | [adapters/prisma](https://next-auth.js.org/adapters/prisma)                    | [@next-auth/prisma-adapter](https://npm.im/@next-auth/prisma-adapter)                 |
-| prisma-legacy  | [![npm](https://img.shields.io/npm/v/@next-auth/prisma-legacy-adapter?label=version&style=flat-square)](https://www.npmjs.com/package/@next-auth/prisma-legacy-adapter)   | [adapters/prisma-legacy](https://next-auth.js.org/adapters/prisma-legacy)      | [@next-auth/prisma-legacy-adapter](https://npm.im/@next-auth/prisma-legacy-adapter)   |
-| fauna          | [![npm](https://img.shields.io/npm/v/@next-auth/fauna-adapter?label=version&style=flat-square)](https://www.npmjs.com/package/@next-auth/fauna-adapter)                   | [adapters/fauna](https://next-auth.js.org/adapters/fauna)                      | [@next-auth/fauna-adapter](https://npm.im/@next-auth/fauna-adapter)                   |
-| dynamodb       | [![npm](https://img.shields.io/npm/v/@next-auth/dynamodb-adapter?label=version&style=flat-square)](https://www.npmjs.com/package/@next-auth/dynamodb-adapter)             | [adapters/dynamodb](https://next-auth.js.org/adapters/dynamodb)                | [@next-auth/dynamodb-adapter](https://npm.im/@next-auth/dynamodb-adapter)             |
-| firebase       | [![npm](https://img.shields.io/npm/v/@next-auth/firebase-adapter?label=version&style=flat-square)](https://www.npmjs.com/package/@next-auth/firebase-adapter)             | [adapters/firebase](https://next-auth.js.org/adapters/firebase)                | [@next-auth/firebase-adapter](https://npm.im/@next-auth/firebase-adapter)             |
-| pouchdb        | [![npm](https://img.shields.io/npm/v/@next-auth/pouchdb-adapter?label=version&style=flat-square)](https://www.npmjs.com/package/@next-auth/pouchdb-adapter)               | [adapters/pouchdb](https://next-auth.js.org/adapters/pouchdb)                  | [@next-auth/pouchdb-adapter](https://npm.im/@next-auth/pouchdb-adapter)               |
+⚠️ The adapter expects your database follows the model defined by NextAuth.js at
+[https://next-auth.js.org/adapters/models](https://next-auth.js.org/adapters/models).
+You might want to use `./tests/seed.sql` to seed your MySQL database with the correct table structure including
+a correct _Index_ and _Foreign Key_ structure. The file only contains the table structure and no data.
 
-## Contributing
+If you create the table structure manually, please pay attention to:
 
-[Creating a database adapter](https://next-auth.js.org/tutorials/creating-a-database-adapter)
-
-If you already have an adapter you would like to add, please create a Pull Request and we will work with you to get it officially supported!
-
-If you would like to also take on the maintenance of the adapter, let us know, and we would be happy to add you as a maintainer to the repository.
-
-## TypeScript
-
-We have an official TypeScript [`Adapter` Interface](https://github.com/nextauthjs/next-auth/blob/main/types/adapters.d.ts), which should make complying with the existing adapter structure and the common tests, etc. much easier.
-
-## Testing
-
-We have developed a basic set of tests that apply to all adapters, i.e. to which all adapters should conform and pass. The code can be found in [`basic-tests.ts`](https://github.com/nextauthjs/adapters/blob/main/basic-tests.ts), and specific implementations of which can be found in the `/tests` subdirectory of each currently available adapter.
-
-All adapter tests should also run against a local instance of the particular database / ORM being tested. For example, for TypeORM we spin up MySQL and PostgreSQL instances via docker, seed them, and execute the test suite separately against both backends.
-
-## Publishing
-
-- [Lerna Independent Mode with Semver](https://samhogy.co.uk/2018/08/lerna-independent-mode-with-semver.html)
-
-## License
-
-ISC
+- Use the namings as described in [https://next-auth.js.org/adapters/models](https://next-auth.js.org/adapters/models)
+- For `timestamptz` use the `DATETIME(6)` type
+- Create a _Foreign Key_ relations as described in the model, with a `ON DELETE CASCADE` attribute
+- Don't add additional fields to the `User` table that conflict with names from the other tables

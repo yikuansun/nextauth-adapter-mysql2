@@ -1,8 +1,12 @@
+/*
+ * For a detailed explanation regarding each configuration property and type check, visit:
+ * https://jestjs.io/docs/en/configuration.html
+ */
+const { defaults: tsjPreset } = require("ts-jest/presets")
+
 module.exports = {
-  preset: "ts-jest",
+  transform: {
+    ...tsjPreset.transform,
+  },
   testEnvironment: "node",
-  modulePathIgnorePatterns: ["dist/", "node_modules/"],
-  // TODO: Set-up with Codecov https://about.codecov.io/
-  // collectCoverage: true,
-  // coverageReporters: ["json", "html"],
 }
